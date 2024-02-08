@@ -1,5 +1,5 @@
 {
-    "name": "node-cloudflare-r2-with-stream",
+    "name": "cloudflare-r2-with-stream",
     "version": "0.1.5",
     "description": "S3 wrapper for Cloudflare R2.",
     "main": "./lib/index.js",
