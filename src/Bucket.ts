@@ -1,5 +1,6 @@
 import { S3 as R2 } from '@aws-sdk/client-s3';
-import { createReadStream, PathLike, ReadStream } from 'fs';
+import { createReadStream, PathLike } from 'fs';
+import { Readable } from 'stream';
 import { CORSPolicy, HeadObjectResponse, ObjectListResponse, UploadFileResponse } from './types';
 
 export class Bucket {
@@ -202,7 +203,7 @@ export class Bucket {
      * @param mimeType Optional mime type. (Default: `application/octet-stream`)
      */
     public async uploadFileStream(
-        fileStream: ReadStream,
+        fileStream: Readable,
         destination: string,
         customMetadata?: Record<string, string>,
         mimeType?: string
@@ -225,7 +226,7 @@ export class Bucket {
                 versionId: result.VersionId,
             };
         } catch (error) {
-            fileStream.close();
+            fileStream.destroy();
             throw error;
         }
     }
