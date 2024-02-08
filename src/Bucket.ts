@@ -1,5 +1,5 @@
 import { S3 as R2 } from '@aws-sdk/client-s3';
-import { createReadStream, PathLike } from 'fs';
+import { createReadStream, PathLike, ReadStream } from 'fs';
 import { CORSPolicy, HeadObjectResponse, ObjectListResponse, UploadFileResponse } from './types';
 
 export class Bucket {
@@ -195,6 +195,42 @@ export class Bucket {
     }
 
     /**
+     * Upload a file stream to the bucket.
+     * @param fileStream Readable stream of the file to upload.
+     * @param destination Name of the file to put in the bucket. If `destination` contains slash character(s), this will put the file inside directories.
+     * @param customMetadata Custom metadata to set to the uploaded file.
+     * @param mimeType Optional mime type. (Default: `application/octet-stream`)
+     */
+    public async uploadFileStream(
+        fileStream: ReadStream,
+        destination: string,
+        customMetadata?: Record<string, string>,
+        mimeType?: string
+    ): Promise<UploadFileResponse> {
+        try {
+            destination = destination.startsWith('/') ? destination.replace(/^\/+/, '') : destination;
+            const result = await this.r2.putObject({
+                Bucket: this.name,
+                Key: destination,
+                Body: fileStream,
+                ContentType: mimeType || 'application/octet-stream',
+                Metadata: customMetadata,
+            });
+
+            return {
+                objectKey: destination,
+                uri: `${this.uri}/${destination}`,
+                publicUrl: this.generateObjectPublicUrl(destination),
+                etag: result.ETag,
+                versionId: result.VersionId,
+            };
+        } catch (error) {
+            fileStream.close();
+            throw error;
+        }
+    }
+
+    /**
      * Deletes a file in the bucket.
      * @param file
      */
@@ -289,3 +325,4 @@ export class Bucket {
         }
     }
 }
+
